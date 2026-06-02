@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard – Comercialización de Gas Natural</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;600;700&family=Barlow:wght@300;400;500&family=Barlow+Condensed:wght@400;600;700&display=swap');
+  :root{
+    --bg:#0d1117;--panel:#161b22;--card:#1c2230;
+    --blue:#2196f3;--cyan:#00e5ff;--green:#00e676;--amber:#ffab00;--red:#ff5252;
+    --txt:#e6edf3;--txt2:#8b949e;--dim:#4a5568;
+    --bdr:rgba(255,255,255,0.07);--bdr-a:rgba(33,150,243,0.35);
+  }
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{background:var(--bg);font-family:'Barlow',sans-serif;color:var(--txt);min-height:100vh;}
+  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(33,150,243,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(33,150,243,0.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0;}
+  .wrap{position:relative;z-index:1;padding:14px;max-width:1600px;margin:0 auto;}
+
+  /* HEADER */
+  header{background:var(--panel);border:1px solid var(--bdr);border-left:3px solid var(--blue);border-radius:8px;padding:12px 20px;margin-bottom:12px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;}
+  .h-left{display:flex;align-items:center;gap:14px;}
+  .logo{width:40px;height:40px;background:linear-gradient(135deg,#1565c0,#0288d1);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0;}
+  .h-title h1{font-family:'Rajdhani',sans-serif;font-size:18px;font-weight:700;letter-spacing:.5px;}
+  .h-title p{font-size:11px;color:var(--txt2);margin-top:2px;}
+  .h-right{display:flex;align-items:center;gap:14px;flex-wrap:wrap;}
+
+  /* SELECTOR FECHA */
+  .date-selector{display:flex;align-items:center;gap:10px;background:rgba(33,150,243,0.08);border:1px solid var(--bdr-a);border-radius:8px;padding:8px 14px;}
+  .date-selector label{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;color:var(--cyan);letter-spacing:1px;text-transform:uppercase;white-space:nowrap;}
+  #fechaSelect{background:#0d1117;border:1px solid var(--bdr-a);border-radius:5px;color:var(--cyan);font-family:'Barlow Condensed',sans-serif;font-size:13px;font-weight:600;padding:4px 10px;outline:none;cursor:pointer;}
+  #fechaSelect option{background:#161b22;color:var(--txt);}
+  .nav-btn{background:rgba(33,150,243,0.15);border:1px solid var(--bdr-a);border-radius:5px;color:var(--cyan);font-size:16px;width:30px;height:30px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:.2s;}
+  .nav-btn:hover{background:rgba(33,150,243,0.3);}
+  .status{display:flex;align-items:center;gap:6px;font-size:12px;color:var(--green);}
+  .status::before{content:'';width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 2s infinite;}
+  @keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+  .gen-info{font-size:10px;color:var(--dim);}
+
+  /* GRID */
+  .g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+  .g3m{display:grid;grid-template-columns:2fr 1.4fr 1.6fr;gap:12px;margin-bottom:12px;}
+  .g3b{display:grid;grid-template-columns:1.2fr 1fr 1fr;gap:12px;margin-bottom:12px;}
+
+  /* PANEL */
+  .panel{background:var(--panel);border:1px solid var(--bdr);border-radius:8px;padding:14px 16px;position:relative;overflow:hidden;}
+  .panel::after{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--blue),transparent);opacity:.5;}
+  .ptitle{font-family:'Barlow Condensed',sans-serif;font-size:11px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:var(--txt2);margin-bottom:10px;display:flex;align-items:center;gap:8px;}
+  .ptitle span{color:var(--blue);font-size:13px;}
+
+  /* KPI */
+  .kg{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .kg2{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .kpi{background:var(--card);border-radius:6px;padding:10px 12px;border:1px solid var(--bdr);}
+  .kl{font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:.8px;margin-bottom:5px;}
+  .kv{font-family:'Rajdhani',sans-serif;font-size:24px;font-weight:700;line-height:1;}
+  .ku{font-size:10px;color:var(--txt2);margin-top:2px;}
+  .blue .kv{color:var(--blue);} .cyan .kv{color:var(--cyan);} .green .kv{color:var(--green);}
+  .amber .kv{color:var(--amber);} .red .kv{color:var(--red);}
+  .span2{grid-column:span 2;}
+
+  /* EXPORT BARS */
+  .mrow{margin-bottom:8px;}
+  .mhdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:3px;}
+  .mname{font-size:11px;} .mval{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;}
+  .mbar{height:5px;background:rgba(255,255,255,0.06);border-radius:3px;overflow:hidden;}
+  .mfill{height:100%;border-radius:3px;transition:width .8s ease;}
+
+  /* CHARTS */
+  .chart-wrap{position:relative;}
+  .donut-wrap{position:relative;}
+  .dcenter{position:absolute;top:50%;left:50%;transform:translate(-50%,-48%);text-align:center;pointer-events:none;}
+  .dc-v{font-family:'Rajdhani',sans-serif;font-size:20px;font-weight:700;display:block;}
+  .dc-l{font-size:9px;color:var(--txt2);letter-spacing:.5px;}
+
+  /* RANKING */
+  .prow{display:flex;align-items:center;gap:8px;padding:5px 0;border-bottom:1px solid rgba(255,255,255,0.04);}
+  .prank{font-family:'Barlow Condensed',sans-serif;font-size:10px;color:var(--dim);min-width:16px;}
+  .pname{font-size:11px;flex:1;}
+  .pbar-bg{flex:1;height:4px;background:rgba(255,255,255,0.06);border-radius:2px;}
+  .pbar-fill{height:100%;border-radius:2px;transition:width .8s ease;}
+  .pval{font-family:'Barlow Condensed',sans-serif;font-size:12px;font-weight:600;min-width:55px;text-align:right;color:var(--cyan);}
+
+  /* TREND */
+  .trend-panel{margin-bottom:12px;}
+
+  footer{text-align:center;padding:10px;font-size:10px;color:var(--dim);letter-spacing:.5px;}
+  @media(max-width:900px){.g3,.g3m,.g3b{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- HEADER -->
+<header>
+  <div class="h-left">
+    <div class="logo">🔥</div>
+    <div class="h-title">
+      <h1>REPORTE DE COMERCIALIZACIÓN DE GAS NATURAL</h1>
+      <p>DEE UEP — Unidad de Control y Transmisión · Bolivia</p>
+    </div>
+  </div>
+  <div class="h-right">
+    <div class="date-selector">
+      <label>📅 Fecha:</label>
+      <button class="nav-btn" id="btnPrev" title="Día anterior">‹</button>
+      <select id="fechaSelect"></select>
+      <button class="nav-btn" id="btnNext" title="Día siguiente">›</button>
+    </div>
+    <div class="status">Sistema Activo</div>
+    <div class="gen-info">Generado: 02/06/2026 13:24</div>
+  </div>
+</header>
+
+<!-- KPI ROW 1 -->
+<div class="g3">
+  <div class="panel">
+    <div class="ptitle"><span>⚡</span> Producción Nacional de Gas</div>
+    <div class="kg">
+      <div class="kpi cyan"><div class="kl">Total Producido</div><div class="kv" id="v-prod-entr">—</div><div class="ku">MMm³/día</div></div>
+      <div class="kpi blue"><div class="kl">Nominado (GCGN)</div><div class="kv" id="v-prod-nom">—</div><div class="ku">MMm³/día</div></div>
+      <div class="kpi amber"><div class="kl">Planta Mayor</div><div class="kv" id="v-planta-mayor-val" style="font-size:18px">—</div><div class="ku" id="v-planta-mayor-nom">—</div></div>
+      <div class="kpi blue"><div class="kl">Plantas Activas</div><div class="kv" id="v-activas">—</div><div class="ku">de 24</div></div>
+      <div class="kpi span2" id="kpi-cumpl" style="background:var(--card);border-radius:6px;padding:10px 12px;border:1px solid var(--bdr)">
+        <div class="kl">Cumpl. Nominación</div><div class="kv" id="v-cumpl" style="font-size:22px">—</div><div class="ku">%</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span>📊</span> Volumen Comercializado</div>
+    <div class="kg">
+      <div class="kpi blue"><div class="kl">M. Interno Nom.</div><div class="kv" id="v-mi-nom">—</div><div class="ku">MMm³</div></div>
+      <div class="kpi cyan"><div class="kl">M. Interno Entr.</div><div class="kv" id="v-mi-entr">—</div><div class="ku">MMm³</div></div>
+      <div class="kpi amber"><div class="kl">Exportación Nom.</div><div class="kv" id="v-exp-nom">—</div><div class="ku">MMm³</div></div>
+      <div class="kpi green"><div class="kl">Export. Entregado</div><div class="kv" id="v-exp-entr">—</div><div class="ku">MMm³</div></div>
+      <div class="kpi blue"><div class="kl">Prod. Nominada</div><div class="kv" id="v-bal-prod-nom">—</div><div class="ku">MMm³</div></div>
+      <div class="kpi cyan"><div class="kl">Comerc. Entregado</div><div class="kv" id="v-bal-com-entr">—</div><div class="ku">MMm³</div></div>
+    </div>
+  </div>
+
+  <div class="panel">
+    <div class="ptitle"><span>🌎</span> Puntos de Exportación</div>
+    <div id="export-bars"></div>
+    <div style="border-top:1px solid var(--bdr);padding-top:8px;margin-top:8px">
+      <div style="font-size:9px;color:var(--txt2);text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">Clientes Mutún (Firme)</div>
+      <div class="kg2">
+        <div class="kpi blue" style="padding:7px 10px"><div class="kl">Petrobras</div><div class="kv" id="v-petrobras" style="font-size:17px">—</div><div class="ku">MMm³</div></div>
+        <div class="kpi cyan" style="padding:7px 10px"><div class="kl">J&amp;F</div><div class="kv" id="v-jf" style="font-size:17px">—</div><div class="ku">MMm³</div></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- GRÁFICOS -->
+<div class="g3m">
+  <div class="panel">
+    <div class="ptitle"><span>🏭</span> Producción por Planta – MMm³/día (Entr D-0)</div>
+    <div class="chart-wrap" style="height:220px"><canvas id="cPlantas"></canvas></div>
+  </div>
+  <div class="panel">
+    <div class="ptitle"><span>🎯</span> Distribución de Mercados</div>
+    <div class="donut-wrap" style="height:220px;position:relative">
+      <canvas id="cDonut"></canvas>
+      <div class="dcenter" style="top:47%"><span class="dc-v" id="v-donut-total">—</span><span class="dc-l">MMm³ Total</span></div>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ptitle"><span>🏠</span> Mercado Interno – Nominado vs Entregado</div>
+    <div class="chart-wrap" style="height:220px"><canvas id="cInterno"></canvas></div>
+  </div>
+</div>
+
+<!-- RANKING + BALANCE -->
+<div class="g3b">
+  <div class="panel">
+    <div class="ptitle"><span>📈</span> Ranking Producción Nacional</div>
+    <div id="prodList"></div>
+  </div>
+  <div class="panel">
+    <div class="ptitle"><span>📉</span> Tendencia – Producción Total</div>
+    <div class="chart-wrap" style="height:200px"><canvas id="cTrend"></canvas></div>
+  </div>
+  <div class="panel">
+    <div class="ptitle"><span>⚖️</span> Balance Total del Gas Natural</div>
+    <div class="kg2">
+      <div class="kpi blue span2"><div class="kl">Producción Nominada</div><div class="kv" id="v-bal-pn" style="font-size:20px">—</div><div class="ku">MMm³</div></div>
+      <div class="kpi green"><div class="kl">Prod. Entregada</div><div class="kv" id="v-bal-pe" style="font-size:18px">—</div><div class="ku">MMm³</div></div>
+      <div class="kpi amber"><div class="kl">Comerc. Nom.</div><div class="kv" id="v-bal-cn" style="font-size:18px">—</div><div class="ku">MMm³</div></div>
+      <div class="kpi cyan span2"><div class="kl">Comercializado Entregado</div><div class="kv" id="v-bal-ce" style="font-size:20px">—</div><div class="ku">MMm³</div></div>
+    </div>
+  </div>
+</div>
+
+<footer>DEE UEP – Unidad de Control y Transmisión · RG-04-D-PP-3-CMCH/UCTR-4 · <span id="footer-fecha">—</span></footer>
+</div>
+
+<script>
+// ── DATOS EMBEBIDOS ─────────────────────────────────────────────────────────
+const REGISTROS = [{"fecha_iso": "2026-05-01", "fecha_disp": "01/05/2026", "prod_entr": 26.3116, "prod_nom": 26.0859, "plantas": [8.016085, 6.132593, 4.564938, 2.484687, 1.590831, 0.762415, 0.482871, 0.458957, 0.404575, 0.401036, 0.3554, 0.217959, 0.240787, 0.060603, 0.047778, 0.021794, 0.016108, 0.018318, 0.018576, 0.010194, 0.00513, 0.0, 0.0, 0.0], "mi_cen_nom": 4499, "mi_cen_entr": 4334, "mi_psl_nom": 2442, "mi_psl_entr": 2494, "mi_red_nom": 5650, "mi_red_entr": 4855, "mi_otr_nom": 992, "mi_otr_entr": 1088, "mi_tot_nom": 13584, "mi_tot_entr": 12771, "mutun_nom": 8807, "mutun_entr": 8777, "sanmatias_nom": 0, "sanmatias_entr": 0, "gija_nom": 3500, "gija_entr": 3586, "exp_tot_nom": 12307, "exp_tot_entr": 12363, "bal_prod_nom": 26086, "bal_prod_entr": 26312, "bal_com_nom": 25892, "bal_com_entr": 25134, "petrobras": 5072, "jf": 1429, "jf_c2": 381, "total_firme": 8482}, {"fecha_iso": "2026-05-02", "fecha_disp": "02/05/2026", "prod_entr": 26.6324, "prod_nom": 26.5649, "plantas": [8.604197, 5.96223, 4.561551, 2.367037, 1.592967, 0.759774, 0.486448, 0.462628, 0.406947, 0.400532, 0.3761, 0.218951, 0.23733, 0.061716, 0.04623, 0.022362, 0.016026, 0.018313, 0.018491, 0.010052, 0.002548, 0.0, 0.0, 0.0], "mi_cen_nom": 4644, "mi_cen_entr": 4431, "mi_psl_nom": 2256, "mi_psl_entr": 2598, "mi_red_nom": 6070, "mi_red_entr": 5114, "mi_otr_nom": 978, "mi_otr_entr": 1045, "mi_tot_nom": 13948, "mi_tot_entr": 13187, "mutun_nom": 8479, "mutun_entr": 8757, "sanmatias_nom": 0, "sanmatias_entr": 0, "gija_nom": 3500, "gija_entr": 3524, "exp_tot_nom": 11979, "exp_tot_entr": 12281, "bal_prod_nom": 26565, "bal_prod_entr": 26632, "bal_com_nom": 25926, "bal_com_entr": 25468, "petrobras": 5072, "jf": 1429, "jf_c2": 381, "total_firme": 8479}];
+const PLANTS    = ["Margarita", "Incahuasi", "Sábalo", "Yapacani", "San Alberto+Itaú", "Santa Rosa", "Ñupuco", "Percheles", "Río Grande", "Caigua", "Churumas", "Carrasco", "V.Grande", "Naranjillos", "Tajibo", "Ag.+Monos", "Warnes", "Yarará", "Sirari", "Tacobo", "La Vert.", "Colpa Caranda", "Paloma", "San Roque"];
+
+// ── ESTADO ──────────────────────────────────────────────────────────────────
+let chartPlantas = null, chartDonut = null, chartInterno = null, chartTrend = null;
+let currentIdx = REGISTROS.length - 1;
+
+Chart.defaults.color = '#8b949e';
+Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+Chart.defaults.font.family = "'Barlow Condensed', sans-serif";
+
+// ── SELECTOR DE FECHA ────────────────────────────────────────────────────────
+const sel = document.getElementById('fechaSelect');
+REGISTROS.forEach((r, i) => {
+  const opt = document.createElement('option');
+  opt.value = i;
+  opt.textContent = r.fecha_disp;
+  if (i === currentIdx) opt.selected = true;
+  sel.appendChild(opt);
+});
+sel.addEventListener('change', () => { currentIdx = parseInt(sel.value); render(); });
+document.getElementById('btnPrev').addEventListener('click', () => {
+  if (currentIdx > 0) { currentIdx--; sel.value = currentIdx; render(); }
+});
+document.getElementById('btnNext').addEventListener('click', () => {
+  if (currentIdx < REGISTROS.length-1) { currentIdx++; sel.value = currentIdx; render(); }
+});
+
+// ── HELPERS ──────────────────────────────────────────────────────────────────
+function fmt(v, d=3) {
+  if (!v || v===0) return '0';
+  return Math.abs(v)>=1000 ? v.toLocaleString('es-BO',{minimumFractionDigits:d,maximumFractionDigits:d}) : v.toFixed(d);
+}
+function set(id, val) { const el=document.getElementById(id); if(el) el.textContent=val; }
+
+// ── RENDER PRINCIPAL ─────────────────────────────────────────────────────────
+function render() {
+  const d = REGISTROS[currentIdx];
+  const cumpl = d.prod_nom > 0 ? (d.prod_entr / d.prod_nom * 100) : 0;
+
+  // KPI Producción
+  set('v-prod-entr', fmt(d.prod_entr));
+  set('v-prod-nom',  fmt(d.prod_nom));
+  set('v-cumpl', cumpl.toFixed(1));
+  const cumplColor = cumpl >= 99 ? 'var(--green)' : cumpl >= 95 ? 'var(--amber)' : 'var(--red)';
+  document.getElementById('v-cumpl').style.color = cumplColor;
+
+  // Planta mayor
+  const pairs = PLANTS.map((n,i)=>([n, d.plantas[i]])).filter(x=>x[1]>0);
+  pairs.sort((a,b)=>b[1]-a[1]);
+  const activas = pairs.filter(x=>x[1]>0);
+  set('v-activas', activas.length);
+  set('v-planta-mayor-val', fmt(pairs[0]?.[1] ?? 0));
+  set('v-planta-mayor-nom', pairs[0]?.[0] ?? '—');
+
+  // KPI Comercial
+  set('v-mi-nom',      fmt(d.mi_tot_nom, 0));
+  set('v-mi-entr',     fmt(d.mi_tot_entr, 0));
+  set('v-exp-nom',     fmt(d.exp_tot_nom, 0));
+  set('v-exp-entr',    fmt(d.exp_tot_entr, 0));
+  set('v-bal-prod-nom',fmt(d.bal_prod_nom, 0));
+  set('v-bal-com-entr',fmt(d.bal_com_entr, 0));
+
+  // Clientes
+  set('v-petrobras', fmt(d.petrobras, 0));
+  set('v-jf',        fmt(d.jf, 0));
+
+  // Exportaciones
+  const maxEx = d.mutun_nom || 1;
+  document.getElementById('export-bars').innerHTML = `
+    <div class="mrow">
+      <div class="mhdr"><div class="mname">🇧🇷 Mutún → Brasil (Firme)</div><div class="mval" style="color:var(--blue)">${fmt(d.mutun_nom,0)} MMm³</div></div>
+      <div class="mbar"><div class="mfill" style="width:100%;background:var(--blue)"></div></div>
+    </div>
+    <div class="mrow">
+      <div class="mhdr"><div class="mname" style="color:var(--txt2)">🇧🇷 San Matías → Brasil</div><div class="mval" style="color:${d.sanmatias_nom>0?'var(--cyan)':'var(--dim)'}">${d.sanmatias_nom>0?fmt(d.sanmatias_nom,0)+' MMm³':'0 MMm³'}</div></div>
+      <div class="mbar"><div class="mfill" style="width:${(d.sanmatias_nom/maxEx*100).toFixed(1)}%;background:var(--cyan)"></div></div>
+    </div>
+    <div class="mrow">
+      <div class="mhdr"><div class="mname" style="color:var(--txt2)">🇦🇷 GIJA → Argentina</div><div class="mval" style="color:${d.gija_nom>0?'var(--amber)':'var(--dim)'}">${d.gija_nom>0?fmt(d.gija_nom,0)+' MMm³':'Sin exportación'}</div></div>
+      <div class="mbar"><div class="mfill" style="width:${(d.gija_nom/maxEx*100).toFixed(1)}%;background:var(--amber)"></div></div>
+    </div>`;
+
+  // Balance
+  set('v-bal-pn', fmt(d.bal_prod_nom, 0));
+  set('v-bal-pe', fmt(d.bal_prod_entr, 0));
+  set('v-bal-cn', fmt(d.bal_com_nom, 0));
+  set('v-bal-ce', fmt(d.bal_com_entr, 0));
+
+  // Footer
+  set('footer-fecha', `Datos al ${d.fecha_disp}`);
+
+  // Ranking
+  const ranking = [...pairs].slice(0, 12);
+  const maxP = ranking[0]?.[1] || 1;
+  document.getElementById('prodList').innerHTML = ranking.map(([n,v],i) => {
+    const c = i===0?'var(--cyan)':i<5?'var(--blue)':'rgba(33,150,243,0.5)';
+    return `<div class="prow"><div class="prank">${String(i+1).padStart(2,'0')}</div><div class="pname">${n}</div><div class="pbar-bg"><div class="pbar-fill" style="width:${(v/maxP*100).toFixed(1)}%;background:${c}"></div></div><div class="pval" style="color:${c}">${fmt(v,4)}</div></div>`;
+  }).join('');
+
+  // Donut total
+  const donutTotal = d.mi_cen_entr + d.mi_psl_entr + d.mi_red_entr + d.mi_otr_entr + d.mutun_entr;
+  set('v-donut-total', fmt(donutTotal, 0));
+
+  // ── GRÁFICOS ──────────────────────────────────────────────────────────────
+  const plantLabels = PLANTS.filter((n,i)=>d.plantas[i]>0);
+  const plantVals   = d.plantas.filter(v=>v>0);
+
+  if (chartPlantas) chartPlantas.destroy();
+  chartPlantas = new Chart(document.getElementById('cPlantas'), {
+    type:'bar',
+    data:{ labels:plantLabels, datasets:[{ label:'Entregado (MMm³)', data:plantVals,
+      backgroundColor:plantVals.map((_,i)=>i===0?'rgba(0,229,255,0.85)':i<5?'rgba(33,150,243,0.75)':'rgba(33,150,243,0.4)'),
+      borderColor:plantVals.map((_,i)=>i===0?'#00e5ff':'#2196f3'), borderWidth:1, borderRadius:3 }] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{display:false}, tooltip:{callbacks:{label:ctx=>` ${ctx.parsed.y.toFixed(4)} MMm³`}} },
+      scales:{ x:{grid:{display:false},ticks:{font:{size:9},maxRotation:45}}, y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{font:{size:9}}} }
+    }
+  });
+
+  if (chartDonut) chartDonut.destroy();
+  chartDonut = new Chart(document.getElementById('cDonut'), {
+    type:'doughnut',
+    data:{ labels:['Termoeléctricas','PSL/PAU/Ref.','Redes de Gas','Otros','Mutún (Brasil)'],
+      datasets:[{ data:[d.mi_cen_entr,d.mi_psl_entr,d.mi_red_entr,d.mi_otr_entr,d.mutun_entr],
+        backgroundColor:['#1565c0','#0288d1','#00acc1','#00796b','#f9a825'], borderColor:'#161b22', borderWidth:3, hoverOffset:8 }] },
+    options:{ responsive:true, maintainAspectRatio:false, cutout:'65%',
+      plugins:{ legend:{position:'bottom',labels:{font:{size:9},padding:8,boxWidth:10}},
+        tooltip:{callbacks:{label:ctx=>` ${ctx.label}: ${ctx.parsed.toLocaleString()} MMm³`}} }
+    }
+  });
+
+  if (chartInterno) chartInterno.destroy();
+  chartInterno = new Chart(document.getElementById('cInterno'), {
+    type:'bar',
+    data:{ labels:['Centrales\nTermoel.','PSL/PAU\nRef.','Redes\nGas','Otros\nMercados'],
+      datasets:[
+        { label:'Nominado', data:[d.mi_cen_nom,d.mi_psl_nom,d.mi_red_nom,d.mi_otr_nom], backgroundColor:'rgba(33,150,243,0.6)', borderColor:'#2196f3', borderWidth:1, borderRadius:3 },
+        { label:'Entregado', data:[d.mi_cen_entr,d.mi_psl_entr,d.mi_red_entr,d.mi_otr_entr], backgroundColor:'rgba(0,229,255,0.5)', borderColor:'#00e5ff', borderWidth:1, borderRadius:3 }
+      ] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top',labels:{font:{size:9},boxWidth:8}} },
+      scales:{ x:{grid:{display:false},ticks:{font:{size:9}}}, y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{font:{size:9}}} }
+    }
+  });
+
+  // Tendencia (todos los registros)
+  if (chartTrend) chartTrend.destroy();
+  chartTrend = new Chart(document.getElementById('cTrend'), {
+    type:'line',
+    data:{ labels:REGISTROS.map(r=>r.fecha_disp),
+      datasets:[
+        { label:'Entr D-0', data:REGISTROS.map(r=>r.prod_entr), borderColor:'#00e5ff', backgroundColor:'rgba(0,229,255,0.08)', tension:.3, fill:true, pointRadius:3, pointBackgroundColor:'#00e5ff' },
+        { label:'Nom D-0',  data:REGISTROS.map(r=>r.prod_nom),  borderColor:'#2196f3', backgroundColor:'rgba(33,150,243,0.05)', tension:.3, fill:false, pointRadius:2, borderDash:[4,3] }
+      ] },
+    options:{ responsive:true, maintainAspectRatio:false,
+      plugins:{ legend:{position:'top',labels:{font:{size:9},boxWidth:8}}, tooltip:{mode:'index',intersect:false} },
+      scales:{ x:{grid:{display:false},ticks:{font:{size:8},maxRotation:45,maxTicksLimit:10}}, y:{grid:{color:'rgba(255,255,255,0.05)'},ticks:{font:{size:9}}} }
+    }
+  });
+}
+
+render();
+</script>
+</body>
+</html>
